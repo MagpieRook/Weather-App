@@ -3,7 +3,7 @@ import csv
 import json
 import operator
 from datetime import date
-from typing import Union
+from typing import Dict, List, Union
 
 import click
 
@@ -19,7 +19,7 @@ def float_catch(string: str) -> Union[float, None]:
     try:
         return float(string)
     except ValueError as e:
-        print(f"Could not parse value to float: {string}, {e}")
+        click.echo(message=f"Could not parse value to float: {string}, {e}", err=True)
         return None
 
 
@@ -55,7 +55,7 @@ class DataEncoder(json.JSONEncoder):
             return super().default(o)
 
 
-def read_file(file_name: str) -> dict[str, list[Date]]:
+def read_file(file_name: str) -> Dict[str, List[Date]]:
     """
     Takes "NAME", "DATE", "PRCP", "SNOW", "TMAX", and "TMIN" fields
     from the CSV file at the destination provided.
@@ -79,7 +79,7 @@ def read_file(file_name: str) -> dict[str, list[Date]]:
                 data_pos[header] = n
 
         if -1 in data_pos.values():
-            print("Improperly formatted CSV.", data_pos)
+            click.echo(message="Improperly formatted CSV.", data_pos, err=True)
             return
 
         # Get and format data based on headers
@@ -97,7 +97,7 @@ def read_file(file_name: str) -> dict[str, list[Date]]:
                 ymd = [int(d) for d in ymd]
                 day = date(*ymd)
             except (ValueError, TypeError) as e:
-                print(f"Could not parse date provided for row {n}: {ymd}, {e}")
+                click.echo(message=f"Could not parse date provided for row {n}: {ymd}, {e}", err=True)
                 continue
 
             precipitation = float_catch(row[data_pos["PRCP"]])
@@ -105,7 +105,7 @@ def read_file(file_name: str) -> dict[str, list[Date]]:
             max_temp = float_catch(row[data_pos["TMAX"]])
             min_temp = float_catch(row[data_pos["TMIN"]])
             if None in [precipitation, snowfall, max_temp, min_temp]:
-                print(f"Could not parse weather data for row {n}: {data_pos}")
+                click.echo(message=f"Could not parse weather data for row {n}: {data_pos}", err=True)
                 continue
 
             data[name].append(
@@ -164,9 +164,17 @@ def days_of_precip(city: str):
 
 @click.command()
 @click.option(
-    "-y", "--year", help="The year to parse (a number from 2010-2019)"
+    "-y",
+    "--year",
+    type=int,
+    help="The year to parse (a number from 2010-2019)",
 )  # noqa
-@click.option("-m", "--month", help="The month to parse in number form (1-12)")
+@click.option(
+    "-m",
+    "--month",
+    type=int,
+    help="The month to parse in number form (1-12)",
+)
 @click.argument("city")
 def max_temp_delta(year: int, month: int, city: str):
     if city not in ("bos", "jnu", "mia"):
@@ -190,7 +198,7 @@ def max_temp_delta(year: int, month: int, city: str):
             return
         if year is None:
             click.echo(
-                message="Year must be provided if month is provided. Please provide a year from 2010 to 2019",  # noqa
+                message="Year is required if month is provided. Please provide a year from 2010 to 2019",  # noqa
                 err=True,
             )
             return

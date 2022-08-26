@@ -19,7 +19,9 @@ def float_catch(string: str) -> Union[float, None]:
     try:
         return float(string)
     except ValueError as e:
-        click.echo(message=f"Could not parse value to float: {string}, {e}", err=True)
+        click.echo(
+            message=f"Could not parse value to float: {string}, {e}", err=True
+        )  # noqa
         return None
 
 
@@ -79,7 +81,10 @@ def read_file(file_name: str) -> Dict[str, List[Date]]:
                 data_pos[header] = n
 
         if -1 in data_pos.values():
-            click.echo(message="Improperly formatted CSV.", data_pos, err=True)
+            click.echo(
+                message=f"Improperly formatted CSV. Missing {', '.join([header for (header, pos) in data_pos if pos == -1])}",  # noqa
+                err=True,
+            )
             return
 
         # Get and format data based on headers
@@ -97,7 +102,10 @@ def read_file(file_name: str) -> Dict[str, List[Date]]:
                 ymd = [int(d) for d in ymd]
                 day = date(*ymd)
             except (ValueError, TypeError) as e:
-                click.echo(message=f"Could not parse date provided for row {n}: {ymd}, {e}", err=True)
+                click.echo(
+                    message=f"Could not parse date provided for row {n}: {ymd}, {e}",  # noqa
+                    err=True,
+                )
                 continue
 
             precipitation = float_catch(row[data_pos["PRCP"]])
@@ -105,7 +113,10 @@ def read_file(file_name: str) -> Dict[str, List[Date]]:
             max_temp = float_catch(row[data_pos["TMAX"]])
             min_temp = float_catch(row[data_pos["TMIN"]])
             if None in [precipitation, snowfall, max_temp, min_temp]:
-                click.echo(message=f"Could not parse weather data for row {n}: {data_pos}", err=True)
+                click.echo(
+                    message=f"Could not parse weather data for row {n}: {data_pos}",  # noqa
+                    err=True,
+                )
                 continue
 
             data[name].append(
